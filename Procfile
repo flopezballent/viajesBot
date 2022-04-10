@@ -1,1 +1,1 @@
-web: python viajesPSQL.py
+web: python viajesPQSL.py
