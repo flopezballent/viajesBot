@@ -36,7 +36,7 @@ VIAJE = {"id_conductor": 1,
 #C1 V1
 def start(message):
     id = message.chat.id
-    msg = "Bienvenido al Tinder de los viajes :fire:\n\n"
+    msg = "Bienvenido a Match Viajes :fire:\n\n"
     msg += "Aca vas a poder encontrar la compañia para tu viaje de una manera rapida y sencilla.\n\n"
     msg += "Vas a poder cargar tu viaje a TANDIL :mountain: o CABA :cityscape: y todos los demas podran verlo para sumarse.\n\n"
     msg += "Para comenzar apretá o enviá el comando:\n /menu"
