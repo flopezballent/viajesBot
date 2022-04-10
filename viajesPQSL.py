@@ -19,7 +19,7 @@ cursor = conn.cursor()
 TOKEN = "2118980188:AAG1WZfFVwxY6K469WVk3_KdVzNnOW11c8A"
 
 bot = telebot.TeleBot(TOKEN)
-server = Flask(_name_)
+server = Flask(__name__)
 
 usuario = {"id":1111,
         "nombre": "Jose",
