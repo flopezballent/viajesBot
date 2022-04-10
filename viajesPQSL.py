@@ -1,9 +1,11 @@
 import psycopg2 as sql
 import telebot
 from telebot import types
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 import emoji
-from datetime import datetime
+from datetime import datetime, timedelta
+from flask import Flask, request
+import os
 
 conn = sql.connect(
     dbname = 'd5o41d99g8sk9p',
@@ -14,8 +16,10 @@ conn = sql.connect(
 print('Se conecto a la BD exitosamente')
 cursor = conn.cursor()
 
+TOKEN = "2118980188:AAG1WZfFVwxY6K469WVk3_KdVzNnOW11c8A"
 
-bot = telebot.TeleBot("2118980188:AAG1WZfFVwxY6K469WVk3_KdVzNnOW11c8A")
+bot = telebot.TeleBot(TOKEN)
+server = Flask(_name_)
 
 usuario = {"id":1111,
         "nombre": "Jose",
@@ -81,21 +85,39 @@ def callback_query(call):
         bot.answer_callback_query(call.id, "OK")
         VIAJE["id_conductor"] = chat_id
         VIAJE["tramo"] = "BUE-TAN"
-        msg = bot.send_message(chat_id, 'Ingrese la fecha en la que va a realizar el viaje\n'
-                                        '(DD/MM/AA)')
+        fechaActual = datetime.today()
+        conjuntoFechas = []
+        for i in range(13):
+            td = timedelta(i)
+            fecha = fechaActual + td
+            f = fecha.strftime('%d/%m/%Y')
+            conjuntoFechas.append(f)
+        markup = ReplyKeyboardMarkup()
+        for fecha in conjuntoFechas:
+            markup.add(KeyboardButton(fecha))
+        msg = bot.send_message(chat_id, 'Ingrese la fecha en la que va a realizar el viaje\n', reply_markup=markup)
         bot.register_next_step_handler(msg, cargar_fecha)
     elif call.data == "TB":
         bot.answer_callback_query(call.id, "OK")
         VIAJE['id_conductor'] = chat_id
         VIAJE['tramo'] = "TAN-BUE"
-        msg = bot.send_message(chat_id, 'Ingrese la fecha en la que va a realizar el viaje\n'
-                                        '(DD/MM/AA)')
+        fechaActual = datetime.today()
+        conjuntoFechas = []
+        for i in range(13):
+            td = timedelta(i)
+            fecha = fechaActual + td
+            f = fecha.strftime('%d/%m/%Y')
+            conjuntoFechas.append(f)
+        markup = ReplyKeyboardMarkup()
+        for fecha in conjuntoFechas:
+            markup.add(KeyboardButton(fecha))
+        msg = bot.send_message(chat_id, 'Elija la fecha en la que va a realizar el viaje\n', reply_markup=markup)
         bot.register_next_step_handler(msg, cargar_fecha)
     elif call.data == "Confirma":
         bot.answer_callback_query(call.id, "OK")
         agregarViaje(VIAJE['id_conductor'], VIAJE['tramo'], VIAJE['fecha'], VIAJE['obs'])
         print("Se agregó un viaje")
-        bot.send_message(chat_id, emoji.emojize('Su viaje se cargó correctamente :thumbs_up:\n\nLe avisaremos si hay alguien interesado en sumarse'))
+        bot.send_message(chat_id, emoji.emojize('Su viaje se cargó correctamente :thumbs_up:\n\nLe avisaremos si hay alguien interesado en sumarse\n\n/menu'))
     elif call.data == "TAN-BUE":
         bot.answer_callback_query(call.id, "OK")
         bot.send_message(chat_id, "Estas son las opciones que tenemos para:\n"+str(call.data)+"\n\nSELECCIONE LA(S) OPCION(ES) QUE LE SIRVA")
@@ -181,6 +203,7 @@ def callback_query(call):
         viajero = cursor.fetchall()
         msg = f":bell: {viajero[0][1]} {viajero[0][2]} quiere viajar con vos. Comunicate con el/ella para coordinar\n\n"
         msg += f"TELEFONO: {viajero[0][4]}"
+        bot.send_message(chat_id, 'El conductor se comunicará con vos para confirmar')
         bot.send_message(call.data, emoji.emojize(msg))
 
 #__________________________FUNCIONES SQL________________________________________
@@ -270,9 +293,10 @@ def confirmacion_markup():
 def cargar_fecha(message):
     #global fecha
     chat_id = message.chat.id
+    markup = types.ReplyKeyboardRemove(selective=False)
     VIAJE['fecha'] = message.text
     msg = bot.send_message(chat_id, "Ingrese alguna aclaracion sobre el viaje\n"
-                                    "(Hora de salida, lugar de salida, etc.)")
+                                    "(Hora de salida, lugar de salida, etc.)", reply_markup=markup)
     bot.register_next_step_handler(msg, cargar_obs)
 #C5
 def cargar_obs(message):
@@ -295,4 +319,17 @@ bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
 print("el bot se esta ejecutando")
 
-bot.polling()
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url = 'https://match-viajes.herokuapp.com/' + TOKEN)
+    return "!", 200
+
+if __name__ == '__main__':
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+
