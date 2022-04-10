@@ -95,7 +95,7 @@ def callback_query(call):
         markup = ReplyKeyboardMarkup()
         for fecha in conjuntoFechas:
             markup.add(KeyboardButton(fecha))
-        msg = bot.send_message(chat_id, 'Ingrese la fecha en la que va a realizar el viaje\n', reply_markup=markup)
+        msg = bot.send_message(chat_id, 'BUE - TAN\nIngrese la fecha en la que va a realizar el viaje\n', reply_markup=markup)
         bot.register_next_step_handler(msg, cargar_fecha)
     elif call.data == "TB":
         bot.answer_callback_query(call.id, "OK")
@@ -111,7 +111,7 @@ def callback_query(call):
         markup = ReplyKeyboardMarkup()
         for fecha in conjuntoFechas:
             markup.add(KeyboardButton(fecha))
-        msg = bot.send_message(chat_id, 'Elija la fecha en la que va a realizar el viaje\n', reply_markup=markup)
+        msg = bot.send_message(chat_id, 'TAN - BUE\nIngrese la fecha en la que va a realizar el viaje\n', reply_markup=markup)
         bot.register_next_step_handler(msg, cargar_fecha)
     elif call.data == "Confirma":
         bot.answer_callback_query(call.id, "OK")
