@@ -1,1 +1,1 @@
-worker: python3 viajesPSQL.py
+web: python viajesPSQL.py
